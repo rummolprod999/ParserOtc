@@ -4,8 +4,8 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Tools.fs" />
     <Compile Include="Settings.fs" />
+    <Compile Include="Tools.fs" />
     <Compile Include="ParserOtc.fs" />
     <Compile Include="Init.fs" />
     <Compile Include="Program.fs" />
