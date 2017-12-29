@@ -206,22 +206,22 @@ module Tools =
                 incr verNum
         ()
     
-    let TestInt (t : JToken) : int = 
+    let TestInt(t : JToken) : int = 
         match t with
         | null -> 0
         | _ -> (int) t
     
-    let TestFloat (t : JToken) : float = 
+    let TestFloat(t : JToken) : float = 
         match t with
         | null -> 0.
         | _ -> (float) t
     
-    let TestString (t : JToken) : string = 
+    let TestString(t : JToken) : string = 
         match t with
         | null -> ""
         | _ -> ((string) t).Trim()
     
-    let TestDate (t : string) : DateTime = 
+    let TestDate(t : string) : DateTime = 
         match t with
         | null | "null" -> DateTime.MinValue
         | _ -> DateTime.Parse(((string) t).Trim('"'))
