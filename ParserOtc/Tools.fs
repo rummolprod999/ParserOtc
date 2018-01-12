@@ -4,9 +4,11 @@ open MySql.Data.MySqlClient
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open System
+open System.Collections.Generic
 open System.Data
 open System.Globalization
 open System.IO
+open System.Linq
 open System.Net
 open System.Text
 open System.Text.RegularExpressions
@@ -184,7 +186,7 @@ module Tools =
         let verNum = ref 1
         let selectTenders = 
             sprintf 
-                "SELECT id_tender FROM %stender WHERE purchase_number = @purchaseNumber AND type_fz = 5 ORDER BY UNIX_TIMESTAMP(date_version) ASC" 
+                "SELECT id_tender FROM %stender WHERE purchase_number = @purchaseNumber AND type_fz = 10 ORDER BY UNIX_TIMESTAMP(date_version) ASC" 
                 stn.Prefix
         let cmd1 = new MySqlCommand(selectTenders, con)
         cmd1.Prepare()
@@ -216,12 +218,77 @@ module Tools =
         | null -> 0.
         | _ -> (float) t
     
+    let TestDecimal(t : JToken) : decimal = 
+        match t with
+        | null -> 0.0m
+        | _ -> 
+            let d = (decimal) t
+            Decimal.Round(d, 2)
+    
     let TestString(t : JToken) : string = 
         match t with
         | null -> ""
         | _ -> ((string) t).Trim()
     
+    let TestStringNull(t : string) : string = 
+        match t with
+        | null -> ""
+        | _ -> ((string) t).Trim('"')
+    
     let TestDate(t : string) : DateTime = 
         match t with
         | null | "null" -> DateTime.MinValue
-        | _ -> DateTime.Parse(((string) t).Trim('"'))
+        | _ -> 
+            try 
+                DateTime.ParseExact(((string) t).Trim('"'), "dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)
+            with ex -> DateTime.MinValue
+    
+    let ClearString(s : string) : string = Regex.Replace(s.ToString(), @"\s+", " ")
+    
+    let GetOkei(s : string) : string = 
+        try 
+            let regex = new Regex(@"\((\w+|\D+)\)")
+            let matches = regex.Matches(s)
+            match matches.Count with
+            | x when x > 0 -> matches.[0].Groups.[1].Value
+            | _ -> ""
+        with ex -> ""
+    
+    let GetOkpds(jt : JToken) : string * string = 
+        try 
+            let okpdO = jt :?> JObject
+            let t = okpdO.ToObject<Dictionary<string, string>>()
+            let okpdN = TestStringNull <| (t.Keys).FirstOrDefault()
+            let okpd = TestStringNull <| (t.Values).FirstOrDefault()
+            (okpdN, okpd)
+        with ex -> ("", "")
+    
+    let (|Int|_|) str = 
+        match System.Int32.TryParse(str) with
+        | (true, int) -> Some(int)
+        | _ -> None
+    
+    let GetOkpdGroup(s : string) : int * string = 
+        let mutable okpd2GroupCode = 0
+        let mutable okpd2GroupLevel1Code = ""
+        if s.Length > 1 then 
+            let t = s.Substring(0, 2)
+            match t with
+            | Int i -> okpd2GroupCode <- i
+            | _ -> okpd2GroupCode <- 0
+        else ()
+        if s.Length > 3 then 
+            if s.IndexOf(".") <> -1 then okpd2GroupLevel1Code <- s.Substring(3, 1)
+            else ()
+        else ()
+        (okpd2GroupCode, okpd2GroupLevel1Code)
+    
+    let GetConformity(s : string) : int = 
+        let sLower = s.ToLower()
+        match sLower with
+        | s when s.Contains("открыт") -> 5
+        | s when s.Contains("аукцион") -> 1
+        | s when s.Contains("котиров") -> 2
+        | s when s.Contains("предложен") -> 3
+        | s when s.Contains("единств") -> 4
+        | _ -> 6

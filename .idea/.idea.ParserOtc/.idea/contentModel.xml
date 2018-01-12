@@ -26,6 +26,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="docs" t="Include" />
         <e p="obj" t="ExcludeRecursive" />
+        <e p="test.json" t="Include" />
       </e>
       <e p="ParserOtc.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />

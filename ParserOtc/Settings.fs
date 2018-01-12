@@ -20,7 +20,8 @@ module Setting =
           PassDb : string
           Server : string
           Port : int
-          GUID : string}
+          GUID : string
+          ConStr : string }
     
     let getSettings() : T = 
         let mutable Database = ""
@@ -49,7 +50,12 @@ module Setting =
                 elif (xnode :?> XmlNode).Name = "passdb" then PassDb <- (xnode :?> XmlNode).InnerText
                 elif (xnode :?> XmlNode).Name = "server" then Server <- (xnode :?> XmlNode).InnerText
                 elif (xnode :?> XmlNode).Name = "port" then Port <- Int32.Parse((xnode :?> XmlNode).InnerText)
-                elif (xnode :?> XmlNode).Name = "guid" then GUID <- (xnode :?> XmlNode).InnerText
+                else 
+                    if (xnode :?> XmlNode).Name = "guid" then GUID <- (xnode :?> XmlNode).InnerText
+            let connectstring = 
+                sprintf 
+                    "Server=%s;port=%d;Database=%s;User Id=%s;password=%s;CharSet=utf8;Convert Zero Datetime=True;default command timeout=3600;Connection Timeout=3600" 
+                    Server Port Database UserDb PassDb
             { Database = Database
               TempPathTenders = TempPathTenders
               LogPathTenders = LogPathTenders
@@ -58,7 +64,8 @@ module Setting =
               PassDb = PassDb
               Server = Server
               Port = Port
-              GUID = GUID}
+              GUID = GUID
+              ConStr = connectstring }
         else 
             { Database = Database
               TempPathTenders = TempPathTenders
@@ -67,5 +74,6 @@ module Setting =
               UserDb = UserDb
               PassDb = PassDb
               Server = Server
-              Port = Port 
-              GUID = GUID}
+              Port = Port
+              GUID = GUID
+              ConStr = "" }

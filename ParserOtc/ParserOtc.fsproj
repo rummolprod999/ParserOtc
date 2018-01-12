@@ -15,4 +15,7 @@
     <PackageReference Include="MySql.Data" Version="6.10.5" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="test.json" />
+  </ItemGroup>
 </Project>
