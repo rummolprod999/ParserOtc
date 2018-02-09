@@ -215,6 +215,21 @@ type ParserOtc(stn : Setting.T) =
                             cmd7.ExecuteNonQuery() |> ignore
                             idEtp := int cmd7.LastInsertedId
                     let numVersion = 0
+                    let mutable idRegion = 0
+                    let regionS = Tools.TestString(t.SelectToken("Regions"))
+                    let regionS = Tools.GetRegionString(regionS)
+                    if regionS <> "" then 
+                        let selectReg = sprintf "SELECT id FROM %sregion WHERE name LIKE @name" stn.Prefix
+                        let cmd46 = new MySqlCommand(selectReg, con)
+                        cmd46.Prepare()
+                        cmd46.Parameters.AddWithValue("@name", "%" + regionS + "%") |> ignore
+                        let reader36 = cmd46.ExecuteReader()
+                        match reader36.HasRows with
+                        | true -> 
+                            reader36.Read() |> ignore
+                            idRegion <- reader36.GetInt32("id")
+                            reader36.Close()
+                        | false -> reader36.Close()
                     let idTender = ref 0
                     (*let insertTender = 
                         sprintf 
@@ -222,7 +237,7 @@ type ParserOtc(stn : Setting.T) =
                             stn.Prefix*)
                     let insertTender = 
                         String.Format
-                            ("INSERT INTO {0}tender SET id_xml = @id_xml, purchase_number = @purchase_number, doc_publish_date = @doc_publish_date, href = @href, purchase_object_info = @purchase_object_info, type_fz = @type_fz, id_organizer = @id_organizer, id_placing_way = @id_placing_way, id_etp = @id_etp, end_date = @end_date, scoring_date = @scoring_date, bidding_date = @bidding_date, cancel = @cancel, date_version = @date_version, num_version = @num_version, notice_version = @notice_version, xml = @xml, print_form = @print_form", 
+                            ("INSERT INTO {0}tender SET id_xml = @id_xml, purchase_number = @purchase_number, doc_publish_date = @doc_publish_date, href = @href, purchase_object_info = @purchase_object_info, type_fz = @type_fz, id_organizer = @id_organizer, id_placing_way = @id_placing_way, id_etp = @id_etp, end_date = @end_date, scoring_date = @scoring_date, bidding_date = @bidding_date, cancel = @cancel, date_version = @date_version, num_version = @num_version, notice_version = @notice_version, xml = @xml, print_form = @print_form, id_region = @id_region", 
                              stn.Prefix)
                     let cmd9 = new MySqlCommand(insertTender, con)
                     cmd9.Prepare()
@@ -244,6 +259,7 @@ type ParserOtc(stn : Setting.T) =
                     cmd9.Parameters.AddWithValue("@notice_version", NoticeVersion) |> ignore
                     cmd9.Parameters.AddWithValue("@xml", url) |> ignore
                     cmd9.Parameters.AddWithValue("@print_form", Printform) |> ignore
+                    cmd9.Parameters.AddWithValue("@id_region", idRegion) |> ignore
                     cmd9.ExecuteNonQuery() |> ignore
                     idTender := int cmd9.LastInsertedId
                     incr ParserOtc.tenderCount
