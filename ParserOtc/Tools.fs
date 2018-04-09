@@ -240,7 +240,7 @@ module Tools =
         | null | "null" -> DateTime.MinValue
         | _ -> 
             try 
-                DateTime.ParseExact(((string) t).Trim('"'), "dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)
+                DateTime.ParseExact(((string) t).Trim('"'), "dd.MM.yyyy (HH:mm)", CultureInfo.InvariantCulture)
             with ex -> DateTime.MinValue
     
     let ClearString(s : string) : string = Regex.Replace(s.ToString(), @"\s+", " ")

@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="test.json" />
+    <Content Include="test2.json" />
   </ItemGroup>
 </Project>
