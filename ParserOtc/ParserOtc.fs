@@ -13,6 +13,7 @@ open System.Xml
 
 type ParserOtc(stn : Setting.T) = 
     let set = stn
+    let mutable minusDate = 50
     let curDate = DateTime.Now
     let lastDate = curDate.AddDays(-1.)
     let curDateS = curDate.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
@@ -27,7 +28,21 @@ type ParserOtc(stn : Setting.T) =
             stn.GUID lastDateS
     static member val tenderCount = ref 0
     static member typeFz = 10
-    
+    member public this.ParsingOld() =
+        for i = minusDate downto 1 do
+            let dateMinus1 = curDate.AddDays(-1.*(float i)).ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            let dateMinus2 = curDate.AddDays(-1.*((float i)+1.)).ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            let urlFullLastOld = 
+                    sprintf 
+                        "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                        stn.GUID dateMinus2 dateMinus1
+            let lastFOld = 
+                        sprintf 
+                            "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                            stn.GUID dateMinus2 dateMinus1
+            this.ParsinForDate(urlFullLastOld, lastFOld)
+            
+        ()
     member public this.Parsing() = 
         let lastF = 
             sprintf 
@@ -50,7 +65,7 @@ type ParserOtc(stn : Setting.T) =
         | s -> 
             let json = JObject.Parse(s)
             let total = Tools.TestInt(json.SelectToken("TotalItems"))
-            if total = 1000 then Logging.Log.logger ("1000 Tenders limit!!!!!", url)
+            if total >= 1000 then Logging.Log.logger ("1000 Tenders limit!!!!!", url)
             let countPage = Tools.TestInt(json.SelectToken("TotalPages"))
             for i = 1 to countPage do
                 this.ParsingPage(i, urlf)
