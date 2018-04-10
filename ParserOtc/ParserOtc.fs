@@ -35,11 +35,11 @@ type ParserOtc(stn : Setting.T) =
             let urlFullLastOld = 
                     sprintf 
                         "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
-                        stn.GUID dateMinus2 dateMinus1
+                        stn.GUID dateMinus2 dateMinus2
             let lastFOld = 
                         sprintf 
                             "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
-                            stn.GUID dateMinus2 dateMinus1
+                            stn.GUID dateMinus2 dateMinus2
             this.ParsinForDate(urlFullLastOld, lastFOld)
             
         ()
