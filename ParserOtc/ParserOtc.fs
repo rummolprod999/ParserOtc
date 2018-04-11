@@ -61,7 +61,7 @@ type ParserOtc(stn : Setting.T) =
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                 stn.GUID curDateS
         try 
-            this.ParsinForDate(urlFullLast, lastF)
+            this.ParsinForDate(urlFull, currF)
         with ex -> Logging.Log.logger ex
         ()
     
