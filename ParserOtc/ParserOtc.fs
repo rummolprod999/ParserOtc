@@ -28,32 +28,41 @@ type ParserOtc(stn : Setting.T) =
             stn.GUID lastDateS
     static member val tenderCount = ref 0
     static member typeFz = 10
-    member public this.ParsingOld() =
+    
+    member public this.ParsingOld() = 
         for i = minusDate downto 1 do
-            let dateMinus1 = curDate.AddDays(-1.*(float i)).ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
-            let dateMinus2 = curDate.AddDays(-1.*((float i)+1.)).ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            let dateMinus1 = 
+                curDate.AddDays(-1. * (float i))
+                       .ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            let dateMinus2 = 
+                curDate.AddDays(-1. * ((float i) + 1.))
+                       .ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
             let urlFullLastOld = 
-                    sprintf 
-                        "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
-                        stn.GUID dateMinus2 dateMinus2
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                    stn.GUID dateMinus2 dateMinus2
             let lastFOld = 
-                        sprintf 
-                            "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
-                            stn.GUID dateMinus2 dateMinus2
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                    stn.GUID dateMinus2 dateMinus2
             this.ParsinForDate(urlFullLastOld, lastFOld)
-            
         ()
+    
     member public this.Parsing() = 
         let lastF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                 stn.GUID lastDateS
-        this.ParsinForDate(urlFullLast, lastF)
+        try 
+            this.ParsinForDate(urlFullLast, lastF)
+        with ex -> Logging.Log.logger ex
         let currF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                 stn.GUID curDateS
-        this.ParsinForDate(urlFull, currF)
+        try 
+            this.ParsinForDate(urlFullLast, lastF)
+        with ex -> Logging.Log.logger ex
         ()
     
     member private this.ParsinForDate(url : string, urlf : int -> string) = 
@@ -61,7 +70,7 @@ type ParserOtc(stn : Setting.T) =
         let startPage = Download.DownloadString url
         //printf "%s" startPage
         match startPage with
-        | null -> Logging.Log.logger ("Dont get start page", url)
+        | null | "" -> Logging.Log.logger ("Dont get start page", url)
         | s -> 
             let json = JObject.Parse(s)
             let total = Tools.TestInt(json.SelectToken("TotalItems"))
