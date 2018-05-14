@@ -77,7 +77,9 @@ type ParserOtc(stn : Setting.T) =
             if total >= 1000 then Logging.Log.logger ("1000 Tenders limit!!!!!", url)
             let countPage = Tools.TestInt(json.SelectToken("TotalPages"))
             for i = 1 to countPage do
-                this.ParsingPage(i, urlf)
+                try 
+                    this.ParsingPage(i, urlf)
+                with ex -> Logging.Log.logger ex
     
     (*[ 1..countPage ] |> List.iter  this.ParsingPage urlf*)
     member private this.ParsingPage(i : int, sF : int -> string) = 
@@ -88,7 +90,12 @@ type ParserOtc(stn : Setting.T) =
             match Page with
             | null -> Logging.Log.logger ("Dont get page", url)
             | s -> 
-                let json = JObject.Parse(s)
+                let mutable json = null
+                try 
+                    json <- JObject.Parse(s)
+                with ex -> 
+                    Logging.Log.logger (ex, s)
+                    raise <| System.Exception(ex.Message)
                 let items = json.SelectToken("Items")
                 if items <> null then 
                     for it in items do
