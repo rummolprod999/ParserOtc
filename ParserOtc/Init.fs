@@ -30,3 +30,4 @@ type Parser(s : Setting.T) =
         with ex -> Logging.Log.logger ex
         Logging.Log.logger "Конец парсинга"
         Logging.Log.logger (sprintf "Добавили тендеров %d" !ParserOtc.tenderCount)
+        Logging.Log.logger (sprintf "Обновили тендеров %d" !ParserOtc.tenderUpCount)

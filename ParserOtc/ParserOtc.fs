@@ -27,6 +27,7 @@ type ParserOtc(stn : Setting.T) =
             "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
             stn.GUID lastDateS
     static member val tenderCount = ref 0
+    static member val tenderUpCount = ref 0
     static member typeFz = 10
     
     member public this.ParsingOld() = 
@@ -137,6 +138,7 @@ type ParserOtc(stn : Setting.T) =
                 else 
                     reader.Close()
                     let mutable cancelStatus = 0
+                    let mutable updated = false
                     let selectDateT = 
                         sprintf 
                             "SELECT id_tender, date_version, cancel FROM %stender WHERE id_xml = @id_xml AND type_fz = @type_fz AND href = @href" 
@@ -152,6 +154,7 @@ type ParserOtc(stn : Setting.T) =
                     adapter.Fill(dt) |> ignore
                     for row in dt.Rows do
                         //printfn "%A" <| (row.["date_version"])
+                        updated <- true
                         match dateModified >= ((row.["date_version"]) :?> DateTime) with
                         | true -> row.["cancel"] <- 1
                         | false -> cancelStatus <- 1
@@ -293,7 +296,9 @@ type ParserOtc(stn : Setting.T) =
                     cmd9.Parameters.AddWithValue("@id_region", idRegion) |> ignore
                     cmd9.ExecuteNonQuery() |> ignore
                     idTender := int cmd9.LastInsertedId
-                    incr ParserOtc.tenderCount
+                    match updated with 
+                    | true -> incr ParserOtc.tenderUpCount
+                    | false -> incr ParserOtc.tenderCount
                     let ParticipantFeature = Tools.TestString <| t.SelectToken("ParticipantFeature")
                     let lotNumber = 1
                     let idLot = ref 0
