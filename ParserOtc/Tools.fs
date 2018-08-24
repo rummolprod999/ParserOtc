@@ -343,7 +343,7 @@ module Tools =
         | s when s.Contains("киров") -> "киров"
         | s when s.Contains("марий") -> "марий"
         | s when s.Contains("мордов") -> "мордов"
-        | s when s.Contains("нижерог") -> "нижегор"
+        | s when s.Contains("нижегор") -> "нижегор"
         | s when s.Contains("оренбур") -> "оренбур"
         | s when s.Contains("пензен") -> "пензен"
         | s when s.Contains("пермс") -> "пермс"
