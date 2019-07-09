@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="RIDER_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file:///57091af4" />
-    <content url="file:///app" />
-    <content url="file://$APPLICATION_CONFIG_DIR$/consoles/db" />
-    <content url="file://$APPLICATION_CONFIG_DIR$/extensions" />
-    <content url="file://$APPLICATION_CONFIG_DIR$/scratches" />
-    <content url="file://$USER_HOME$/.Rider2018.2/system/extResources" />
     <content url="file://$USER_HOME$/.nuget/packages/mysql.data/6.10.6/contentFiles/any/netcoreapp2.0/app.config.transform" />
     <content url="file://$USER_HOME$/.nuget/packages/mysql.data/6.10.6/contentFiles/any/netcoreapp2.0/docs/MySqlCommand.xml" />
     <content url="file://$USER_HOME$/.nuget/packages/mysql.data/6.10.6/contentFiles/any/netcoreapp2.0/docs/MySqlCommandBuilder.xml" />

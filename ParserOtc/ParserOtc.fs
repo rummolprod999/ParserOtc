@@ -13,7 +13,7 @@ open System.Xml
 
 type ParserOtc(stn : Setting.T) = 
     let set = stn
-    let mutable minusDate = 50
+    let mutable minusDate = 10
     let curDate = DateTime.Now
     let lastDate = curDate.AddDays(-1.)
     let curDateS = curDate.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
@@ -47,6 +47,26 @@ type ParserOtc(stn : Setting.T) =
                     "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                     stn.GUID dateMinus2 dateMinus2
             this.ParsinForDate(urlFullLastOld, lastFOld)
+            
+            let urlFullLastOld = 
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                    stn.GUID dateMinus2 dateMinus2
+            let lastFOld = 
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                    stn.GUID dateMinus2 dateMinus2
+            this.ParsinForDate(urlFullLastOld, lastFOld)
+            
+            let urlFullLastOld = 
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                    stn.GUID dateMinus2 dateMinus2
+            let lastFOld = 
+                sprintf 
+                    "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&DatePublishedTo=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=1" 
+                    stn.GUID dateMinus2 dateMinus2
+            this.ParsinForDate(urlFullLastOld, lastFOld)
         ()
     
     member public this.Parsing() = 
@@ -57,9 +77,26 @@ type ParserOtc(stn : Setting.T) =
         try 
             this.ParsinForDate(urlFullLast, lastF)
         with ex -> Logging.Log.logger ex
+        
+        let lastF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                stn.GUID lastDateS
+        try 
+            this.ParsinForDate(urlFullLast, lastF)
+        with ex -> Logging.Log.logger ex
+        
         let currF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                stn.GUID curDateS
+        try 
+            this.ParsinForDate(urlFull, currF)
+        with ex -> Logging.Log.logger ex
+        
+        let currF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
                 stn.GUID curDateS
         try 
             this.ParsinForDate(urlFull, currF)
@@ -71,7 +108,7 @@ type ParserOtc(stn : Setting.T) =
         let startPage = Download.DownloadString url
         //printf "%s" startPage
         match startPage with
-        | null | "" -> Logging.Log.logger ("Dont get start page", url)
+        | null | "" -> Logging.Log.logger ("Don't get start page", url)
         | s -> 
             let json = JObject.Parse(s)
             let total = Tools.TestInt(json.SelectToken("TotalItems"))
@@ -109,7 +146,7 @@ type ParserOtc(stn : Setting.T) =
     member private this.ParsingTender(t : JToken, url : string) = 
         let mutable pNum = Tools.TestString <| t.SelectToken("Number")
         let RegistrationNumber = Tools.TestString <| t.SelectToken("RegistrationNumber")
-        if String.IsNullOrEmpty(RegistrationNumber) then 
+        if String.IsNullOrEmpty(RegistrationNumber) ||  not (String.IsNullOrEmpty(RegistrationNumber)) then 
             if String.IsNullOrEmpty(pNum) then Logging.Log.logger "Empty pNum"
             else 
                 use con = new MySqlConnection(set.ConStr)

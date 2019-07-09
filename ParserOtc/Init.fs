@@ -27,6 +27,7 @@ type Parser(s : Setting.T) =
         try 
             let Potc = ParserOtc(s)
             Potc.Parsing()
+            //Potc.ParsingOld()
         with ex -> Logging.Log.logger ex
         Logging.Log.logger "Конец парсинга"
         Logging.Log.logger (sprintf "Добавили тендеров %d" !ParserOtc.tenderCount)
