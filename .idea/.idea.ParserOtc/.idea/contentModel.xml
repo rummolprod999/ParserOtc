@@ -21,6 +21,7 @@
     <e p="$USER_HOME$/.nuget/packages/mysql.data/6.10.6/contentFiles/any/netcoreapp2.0/docs/MySqlTransaction.xml" t="Include" />
     <e p="$USER_HOME$/.nuget/packages/mysql.data/6.10.6/contentFiles/any/netcoreapp2.0/web.config.transform" t="Include" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p=".git/info/exclude" t="IncludeRecursive" />
       <e p="ParserOtc" t="IncludeRecursive">
         <e p="Init.fs" t="Include" />
         <e p="ParserOtc.fs" t="Include" />

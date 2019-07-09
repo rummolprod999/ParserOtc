@@ -86,6 +86,22 @@ type ParserOtc(stn : Setting.T) =
             this.ParsinForDate(urlFullLast, lastF)
         with ex -> Logging.Log.logger ex
         
+        let lastF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&ApplicationStartDateFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                stn.GUID lastDateS
+        try 
+            this.ParsinForDate(urlFullLast, lastF)
+        with ex -> Logging.Log.logger ex
+        
+        let lastF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&ApplicationStartDateFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
+                stn.GUID lastDateS
+        try 
+            this.ParsinForDate(urlFullLast, lastF)
+        with ex -> Logging.Log.logger ex
+        
         let currF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
@@ -97,6 +113,22 @@ type ParserOtc(stn : Setting.T) =
         let currF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                stn.GUID curDateS
+        try 
+            this.ParsinForDate(urlFull, currF)
+        with ex -> Logging.Log.logger ex
+        
+        let currF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&ApplicationStartDateFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=3&FilterData.SortingDirection=2" 
+                stn.GUID curDateS
+        try 
+            this.ParsinForDate(urlFull, currF)
+        with ex -> Logging.Log.logger ex
+        
+        let currF = 
+            sprintf 
+                "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&ApplicationStartDateFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                 stn.GUID curDateS
         try 
             this.ParsinForDate(urlFull, currF)
