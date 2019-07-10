@@ -18,7 +18,7 @@ type ParserOtc(stn : Setting.T) =
     let lastDate = curDate.AddDays(-1.)
     let curDateS = curDate.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
     let lastDateS = lastDate.ToString("MM/dd/yyyy", System.Globalization.CultureInfo.InvariantCulture)
-    let urlFull = 
+    (*let urlFull = 
         sprintf 
             "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
             stn.GUID curDateS
@@ -57,7 +57,11 @@ type ParserOtc(stn : Setting.T) =
     let urlFullLast4 = 
         sprintf 
             "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&ApplicationStartDateFrom=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=3&FilterData.SortingDirection=1" 
-            stn.GUID lastDateS
+            stn.GUID lastDateS*)
+            
+    let dateTypes = ["DatePublishedFrom"; "ApplicationStartDateFrom"]
+    let sortingFields = ["2"; "3"; "4"]
+    let sortingDirections = ["1"; "2"]
     static member val tenderCount = ref 0
     static member val tenderUpCount = ref 0
     static member typeFz = 10
@@ -101,8 +105,18 @@ type ParserOtc(stn : Setting.T) =
             this.ParsinForDate(urlFullLastOld, lastFOld)
         ()
     
-    member public this.Parsing() = 
-        let lastF = 
+    member public this.Parsing() =
+
+        for x in dateTypes do
+            for y in sortingFields do
+                for z in sortingDirections do
+                    let LF  =  sprintf "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&%s=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=%s&FilterData.SortingDirection=%s&FilterData.PageIndex=%d&ShowPrivate=true" stn.GUID x lastDateS y z
+                    let LFF = sprintf "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&%s=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=%s&FilterData.SortingDirection=%s&ShowPrivate=true" stn.GUID x lastDateS y z
+                    try 
+                        this.ParsinForDate(LFF, LF)
+                    with ex -> Logging.Log.logger ex
+
+        (*let lastF = 
             sprintf 
                 "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&DatePublishedFrom=%s&FilterData.PageSize=100&FilterData.PageIndex=%d&state=1&FilterData.SortingField=2&FilterData.SortingDirection=2" 
                 stn.GUID lastDateS
@@ -180,7 +194,7 @@ type ParserOtc(stn : Setting.T) =
                 stn.GUID curDateS
         try 
             this.ParsinForDate(urlFull3, currF)
-        with ex -> Logging.Log.logger ex
+        with ex -> Logging.Log.logger ex*)
         ()
     
     member private this.ParsinForDate(url : string, urlf : int -> string) = 
