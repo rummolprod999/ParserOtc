@@ -115,6 +115,14 @@ type ParserOtc(stn : Setting.T) =
                     try 
                         this.ParsinForDate(LFF, LF)
                     with ex -> Logging.Log.logger ex
+        for x in dateTypes do
+            for y in sortingFields do
+                for z in sortingDirections do
+                    let LF  =  sprintf "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&%s=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=%s&FilterData.SortingDirection=%s&FilterData.PageIndex=%d&ShowPrivate=true" stn.GUID x curDateS y z
+                    let LFF = sprintf "https://otc.ru/tenders/api/public/GetTendersExtended?id=%s&%s=%s&FilterData.PageSize=100&state=1&FilterData.SortingField=%s&FilterData.SortingDirection=%s&ShowPrivate=true" stn.GUID x curDateS y z
+                    try 
+                        this.ParsinForDate(LFF, LF)
+                    with ex -> Logging.Log.logger ex
 
         (*let lastF = 
             sprintf 
