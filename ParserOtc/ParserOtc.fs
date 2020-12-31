@@ -10,6 +10,7 @@ open System.Linq
 open System.Text
 open System.Text.RegularExpressions
 open System.Xml
+open Tools
 
 type ParserOtc(stn : Setting.T) = 
     let set = stn
@@ -213,9 +214,9 @@ type ParserOtc(stn : Setting.T) =
         | null | "" -> Logging.Log.logger ("Don't get start page", url)
         | s -> 
             let json = JObject.Parse(s)
-            let total = Tools.TestInt(json.SelectToken("TotalItems"))
+            let total = TestInt(json.SelectToken("TotalItems"))
             if total >= 1000 then Logging.Log.logger ("1000 Tenders limit!!!!!", url)
-            let countPage = Tools.TestInt(json.SelectToken("TotalPages"))
+            let countPage = TestInt(json.SelectToken("TotalPages"))
             for i = 1 to countPage do
                 try 
                     this.ParsingPage(i, urlf)
@@ -235,7 +236,7 @@ type ParserOtc(stn : Setting.T) =
                     json <- JObject.Parse(s)
                 with ex -> 
                     Logging.Log.logger (ex, s)
-                    raise <| System.Exception(ex.Message)
+                    raise <| Exception(ex.Message)
                 let items = json.SelectToken("Items")
                 if items <> null then 
                     for it in items do
@@ -246,22 +247,24 @@ type ParserOtc(stn : Setting.T) =
         ()
     
     member private this.ParsingTender(t : JToken, url : string) = 
-        let mutable pNum = Tools.TestString <| t.SelectToken("Number")
-        let RegistrationNumber = Tools.TestString <| t.SelectToken("RegistrationNumber")
-        let LotOrderNumber = Tools.TestString <| t.SelectToken("LotOrderNumber")
-        pNum <- sprintf "%s_%s" pNum LotOrderNumber
+        let mutable pNum = TestString <| t.SelectToken("Number")
+        let RegistrationNumber = TestString <| t.SelectToken("RegistrationNumber")
+        let LotOrderNumber = TestString <| t.SelectToken("LotOrderNumber")
+        let href = TestString(t.SelectToken("Url"))
+        let ExtractPurNum = href.Get1FromRegexpOrDefault("TradeRegistrySearch#(\d+)")
+        if ExtractPurNum <> "" then pNum <- ExtractPurNum
+        //pNum <- sprintf "%s_%s" pNum LotOrderNumber
         if String.IsNullOrEmpty(RegistrationNumber) ||  not (String.IsNullOrEmpty(RegistrationNumber)) then 
             if String.IsNullOrEmpty(pNum) then Logging.Log.logger "Empty pNum"
             else 
                 use con = new MySqlConnection(set.ConStr)
                 con.Open()
                 //printfn "%s" (JsonConvert.SerializeObject(t.SelectToken("DatePublished")))
-                let DatePublished = Tools.TestDate <| JsonConvert.SerializeObject(t.SelectToken("DatePublished"))
+                let DatePublished = TestDate <| JsonConvert.SerializeObject(t.SelectToken("DatePublished"))
                 //printfn "%A" DatePublished
                 let dateModified = DatePublished
-                let EndDate = Tools.TestDate <| JsonConvert.SerializeObject(t.SelectToken("ApplicationEndDate"))
-                let ScoringDate = Tools.TestDate <| JsonConvert.SerializeObject(t.SelectToken("ConsiderationDate"))
-                let href = Tools.TestString(t.SelectToken("Url"))
+                let EndDate = TestDate <| JsonConvert.SerializeObject(t.SelectToken("ApplicationEndDate"))
+                let ScoringDate = TestDate <| JsonConvert.SerializeObject(t.SelectToken("ConsiderationDate"))
                 let selectTend = 
                     sprintf 
                         "SELECT id_tender FROM %stender WHERE id_xml = @id_xml AND date_version = @date_version AND type_fz = @type_fz AND end_date = @end_date AND scoring_date = @scoring_date AND href = @href" 
@@ -302,20 +305,20 @@ type ParserOtc(stn : Setting.T) =
                     let commandBuilder = new MySqlCommandBuilder(adapter)
                     commandBuilder.ConflictOption <- ConflictOption.OverwriteChanges
                     adapter.Update(dt) |> ignore
-                    let TradeName = Tools.TestString(t.SelectToken("TradeName"))
-                    let TenderName = Tools.TestString(t.SelectToken("TenderName"))
+                    let TradeName = TestString(t.SelectToken("TradeName"))
+                    let TenderName = TestString(t.SelectToken("TenderName"))
                     
                     let PurchaseObjectInfo = 
-                        if TradeName = TenderName then Tools.ClearString TenderName
-                        else Tools.ClearString <| sprintf "%s %s" TenderName TradeName
+                        if TradeName = TenderName then ClearString TenderName
+                        else ClearString <| sprintf "%s %s" TenderName TradeName
                     
                     //printfn "%s" PurchaseObjectInfo
                     let NoticeVersion = ""
                     let Printform = href
                     let IdOrg = ref 0
-                    let OrgInn = Tools.TestString(t.SelectToken("Organizer.Inn"))
+                    let OrgInn = TestString(t.SelectToken("Organizer.Inn"))
                     if OrgInn <> "" then 
-                        let OrgKpp = Tools.TestString(t.SelectToken("Organizer.Kpp"))
+                        let OrgKpp = TestString(t.SelectToken("Organizer.Kpp"))
                         let selectOrg = 
                             sprintf "SELECT id_organizer FROM %sorganizer WHERE inn = @inn AND kpp = @kpp" stn.Prefix
                         let cmd3 = new MySqlCommand(selectOrg, con)
@@ -330,7 +333,7 @@ type ParserOtc(stn : Setting.T) =
                             reader.Close()
                         | false -> 
                             reader.Close()
-                            let OrgName = Tools.TestString(t.SelectToken("Organizer.Name"))
+                            let OrgName = TestString(t.SelectToken("Organizer.Name"))
                             let addOrganizer = 
                                 sprintf "INSERT INTO %sorganizer SET full_name = @full_name, inn = @inn, kpp = @kpp" 
                                     stn.Prefix
@@ -341,7 +344,7 @@ type ParserOtc(stn : Setting.T) =
                             cmd5.ExecuteNonQuery() |> ignore
                             IdOrg := int cmd5.LastInsertedId
                     let idPlacingWay = ref 0
-                    let placingWayName = Tools.TestString(t.SelectToken("Type"))
+                    let placingWayName = TestString(t.SelectToken("Type"))
                     if placingWayName <> "" then 
                         let selectPlacingWay = 
                             sprintf "SELECT id_placing_way FROM %splacing_way WHERE name= @name" stn.Prefix
@@ -356,7 +359,7 @@ type ParserOtc(stn : Setting.T) =
                             reader3.Close()
                         | false -> 
                             reader3.Close()
-                            let conf = Tools.GetConformity placingWayName
+                            let conf = GetConformity placingWayName
                             let insertPlacingWay = 
                                 sprintf "INSERT INTO %splacing_way SET name= @name, conformity = @conformity" stn.Prefix
                             let cmd7 = new MySqlCommand(insertPlacingWay, con)
@@ -391,8 +394,8 @@ type ParserOtc(stn : Setting.T) =
                             idEtp := int cmd7.LastInsertedId
                     let numVersion = 0
                     let mutable idRegion = 0
-                    let regionS = Tools.TestString(t.SelectToken("Regions"))
-                    let regionS = Tools.GetRegionString(regionS)
+                    let regionS = TestString(t.SelectToken("Regions"))
+                    let regionS = GetRegionString(regionS)
                     if regionS <> "" then 
                         let selectReg = sprintf "SELECT id FROM %sregion WHERE name LIKE @name" stn.Prefix
                         let cmd46 = new MySqlCommand(selectReg, con)
@@ -440,11 +443,11 @@ type ParserOtc(stn : Setting.T) =
                     match updated with 
                     | true -> incr ParserOtc.tenderUpCount
                     | false -> incr ParserOtc.tenderCount
-                    let ParticipantFeature = Tools.TestString <| t.SelectToken("ParticipantFeature")
+                    let ParticipantFeature = TestString <| t.SelectToken("ParticipantFeature")
                     let lotNumber = 1
                     let idLot = ref 0
-                    let lotMaxPrice = Tools.TestDecimal <| t.SelectToken("Price")
-                    let lotCurrency = Tools.TestString <| t.SelectToken("Currency")
+                    let lotMaxPrice = TestDecimal <| t.SelectToken("Price")
+                    let lotCurrency = TestString <| t.SelectToken("Currency")
                     let insertLot = 
                         sprintf 
                             "INSERT INTO %slot SET id_tender = @id_tender, lot_number = @lot_number, max_price = @max_price, currency = @currency" 
@@ -465,7 +468,7 @@ type ParserOtc(stn : Setting.T) =
                         cmd30.Parameters.AddWithValue("@info", ParticipantFeature) |> ignore
                         cmd30.ExecuteNonQuery() |> ignore
                     let idCustomer = ref 0
-                    let CusInn = Tools.TestString <| t.SelectToken("Customers[0].Inn")
+                    let CusInn = TestString <| t.SelectToken("Customers[0].Inn")
                     if CusInn <> "" then 
                         let selectCustomer = sprintf "SELECT id_customer FROM %scustomer WHERE inn = @inn" stn.Prefix
                         let cmd3 = new MySqlCommand(selectCustomer, con)
@@ -484,7 +487,7 @@ type ParserOtc(stn : Setting.T) =
                                     "INSERT INTO %scustomer SET reg_num = @reg_num, full_name = @full_name, inn = @inn" 
                                     stn.Prefix
                             let RegNum = Guid.NewGuid().ToString()
-                            let CusName = Tools.TestString <| t.SelectToken("Customers[0].Name")
+                            let CusName = TestString <| t.SelectToken("Customers[0].Name")
                             let cmd14 = new MySqlCommand(insertCustomer, con)
                             cmd14.Prepare()
                             cmd14.Parameters.AddWithValue("@reg_num", RegNum) |> ignore
@@ -495,11 +498,11 @@ type ParserOtc(stn : Setting.T) =
                     let items = t.SelectToken("TenderItems")
                     if items <> null then 
                         for it in items do
-                            let quantity = Tools.TestString <| it.SelectToken("QuantityString")
-                            let okei = Tools.GetOkei quantity
+                            let quantity = TestString <| it.SelectToken("QuantityString")
+                            let okei = GetOkei quantity
                             let okpdNameT = it.SelectToken("Okpd2s")
-                            let (okpdName, okpd) = Tools.GetOkpds okpdNameT
-                            let (okpd2GroupCode, okpd2GroupLevel1Code) = Tools.GetOkpdGroup okpd
+                            let (okpdName, okpd) = GetOkpds okpdNameT
+                            let (okpd2GroupCode, okpd2GroupLevel1Code) = GetOkpdGroup okpd
                             let insertLotitem = 
                                 sprintf 
                                     "INSERT INTO %spurchase_object SET id_lot = @id_lot, id_customer = @id_customer, okpd2_code = @okpd2_code, okpd_name = @okpd_name, name = @name, quantity_value = @quantity_value, okei = @okei, customer_quantity_value = @customer_quantity_value, okpd2_group_code = @okpd2_group_code, okpd2_group_level1_code = @okpd2_group_level1_code" 
@@ -517,7 +520,7 @@ type ParserOtc(stn : Setting.T) =
                             cmd19.Parameters.AddWithValue("@okpd2_group_code", okpd2GroupCode) |> ignore
                             cmd19.Parameters.AddWithValue("@okpd2_group_level1_code", okpd2GroupLevel1Code) |> ignore
                             cmd19.ExecuteNonQuery() |> ignore
-                            let deliveryPlace = Tools.TestString <| it.SelectToken("DeliveryAddress")
+                            let deliveryPlace = TestString <| it.SelectToken("DeliveryAddress")
                             let insertCustomerRequirement = 
                                 sprintf 
                                     "INSERT INTO %scustomer_requirement SET id_lot = @id_lot, id_customer = @id_customer, delivery_place = @delivery_place" 
@@ -529,12 +532,12 @@ type ParserOtc(stn : Setting.T) =
                             cmd16.Parameters.AddWithValue("@delivery_place", deliveryPlace) |> ignore
                             cmd16.ExecuteNonQuery() |> ignore
                     try 
-                        Tools.AddVerNumber con pNum stn
+                        AddVerNumber con pNum stn
                     with ex -> 
                         Logging.Log.logger "Ошибка добавления версий тендера"
                         Logging.Log.logger ex
                     try 
-                        Tools.TenderKwords con (!idTender) stn
+                        TenderKwords con (!idTender) stn
                     with ex -> 
                         Logging.Log.logger "Ошибка добавления kwords тендера"
                         Logging.Log.logger ex

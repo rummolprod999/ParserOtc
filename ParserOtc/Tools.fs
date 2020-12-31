@@ -264,7 +264,7 @@ module Tools =
         with ex -> ("", "")
     
     let (|Int|_|) str = 
-        match System.Int32.TryParse(str) with
+        match Int32.TryParse(str) with
         | (true, int) -> Some(int)
         | _ -> None
     
@@ -385,3 +385,16 @@ module Tools =
         | s when s.Contains("севастоп") -> "севастоп"
         | s when s.Contains("байкон") -> "байкон"
         | _ -> ""
+    
+    let (|RegexMatch1|_|) (pattern : string) (input : string) =
+        let result = Regex.Match(input, pattern)
+        if result.Success then
+            match (List.tail [ for g in result.Groups -> g.Value ]) with
+            | fst :: [] -> Some(fst)
+            | _ -> None
+        else None
+    type String with 
+        member this.Get1FromRegexpOrDefault(regex: string): string =
+                match this with
+                | RegexMatch1 regex gr1 -> gr1
+                | _ -> ""
