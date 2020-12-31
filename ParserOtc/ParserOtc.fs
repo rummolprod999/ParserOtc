@@ -248,6 +248,8 @@ type ParserOtc(stn : Setting.T) =
     member private this.ParsingTender(t : JToken, url : string) = 
         let mutable pNum = Tools.TestString <| t.SelectToken("Number")
         let RegistrationNumber = Tools.TestString <| t.SelectToken("RegistrationNumber")
+        let LotOrderNumber = Tools.TestString <| t.SelectToken("LotOrderNumber")
+        pNum <- sprintf "%s_%s" pNum LotOrderNumber
         if String.IsNullOrEmpty(RegistrationNumber) ||  not (String.IsNullOrEmpty(RegistrationNumber)) then 
             if String.IsNullOrEmpty(pNum) then Logging.Log.logger "Empty pNum"
             else 
